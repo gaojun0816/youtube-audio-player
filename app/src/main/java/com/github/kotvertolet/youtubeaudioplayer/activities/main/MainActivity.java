@@ -711,14 +711,14 @@ public class MainActivity extends AppCompatActivity implements MainActivityContr
                 case Player.STATE_BUFFERING:
                     showLoadingIndicator(true);
                     break;
+                case Player.STATE_IDLE:
+                    Log.i(TAG, "Player is idling, status code: " + playerStateCode);
+                    break;
                 case PLAYBACK_PROGRESS_CHANGED:
                     int trackCurrentPosition = intent.getIntExtra(EXTRA_TRACK_PROGRESS, -1);
                     sbPlayerProgress.setProgress(trackCurrentPosition);
                     tvTrackCurrentTime.setText(utils.convertMillsIntoTimeString(trackCurrentPosition));
                     Log.i(TAG, "Progress changed: " + utils.convertMillsIntoTimeString(trackCurrentPosition));
-                    break;
-                case Player.STATE_IDLE:
-                    Log.i(TAG, "Player is idling, status code: " + playerStateCode);
                     break;
                 case PLAYER_ERROR:
                     setPlayButtonState(false);
@@ -729,11 +729,11 @@ public class MainActivity extends AppCompatActivity implements MainActivityContr
                     break;
                 case PLAYER_PAUSED:
                     setPlayButtonState(false);
-                    Log.e(TAG, "Player paused");
+                    Log.i(TAG, "Player paused");
                     break;
                 case PLAYER_RESUMED:
                     setPlayButtonState(true);
-                    Log.e(TAG, "Player resumed");
+                    Log.i(TAG, "Player resumed");
                     break;
                 default:
                     Log.e(TAG, "Wrong player state code: " + playerStateCode);

@@ -326,6 +326,7 @@ public class ExoPlayerService extends Service {
                     break;
                 case PlayerAction.PAUSE_PLAY:
                     changePlaybackState();
+                    Log.i(TAG, "Player Pause or Play");
                     break;
                 case PlayerAction.CHANGE_PLAYBACK_PROGRESS:
                     int progress = intent.getIntExtra(EXTRA_TRACK_PROGRESS, 0);
