@@ -38,6 +38,9 @@ public class YoutubeSongDto implements Parcelable {
     private String likeCount;
     private String dislikeCount;
     private long lastPlayedTimestamp;
+    // For continuing previous play
+    private long playbackPosition = 0;
+    private int currentWindow = 0;
 
     @Ignore
     public YoutubeSongDto(String videoId, String title, String author, String duration,
@@ -91,6 +94,8 @@ public class YoutubeSongDto implements Parcelable {
         dest.writeString(likeCount);
         dest.writeString(dislikeCount);
         dest.writeLong(lastPlayedTimestamp);
+        dest.writeLong(playbackPosition);
+        dest.writeInt(currentWindow);
     }
 
     public long getId() {
@@ -188,6 +193,22 @@ public class YoutubeSongDto implements Parcelable {
 
     public void setLastPlayedTimestamp(long lastPlayedTimestamp) {
         this.lastPlayedTimestamp = lastPlayedTimestamp;
+    }
+
+    public long getPlaybackPosition() {
+        return playbackPosition;
+    }
+
+    public void setPlaybackPosition(long playbackPosition) {
+        this.playbackPosition = playbackPosition;
+    }
+
+    public int getCurrentWindow() {
+        return currentWindow;
+    }
+
+    public void setCurrentWindow(int currentWindow) {
+        this.currentWindow = currentWindow;
     }
 
     @Override

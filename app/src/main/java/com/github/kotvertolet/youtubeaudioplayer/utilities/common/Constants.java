@@ -69,6 +69,8 @@ public class Constants {
     public final static int REPEAT_MODE_REPEAT_ALL = 1;
     public final static int REPEAT_MODE_REPEAT_ONE = 2;
 
+    public final static String MAIN_ACTIVITY_PAUSED = "main_activity_paused";
+
     public final static String[] RECOMMENDATIONS_HEADERS_ARR;
 
     static {

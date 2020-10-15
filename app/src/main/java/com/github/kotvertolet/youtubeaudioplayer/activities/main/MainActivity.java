@@ -105,6 +105,7 @@ import static com.github.kotvertolet.youtubeaudioplayer.utilities.common.Constan
 import static com.github.kotvertolet.youtubeaudioplayer.utilities.common.Constants.REPEAT_MODE_NO_REPEAT;
 import static com.github.kotvertolet.youtubeaudioplayer.utilities.common.Constants.REPEAT_MODE_REPEAT_ALL;
 import static com.github.kotvertolet.youtubeaudioplayer.utilities.common.Constants.REPEAT_MODE_REPEAT_ONE;
+import static com.github.kotvertolet.youtubeaudioplayer.utilities.common.Constants.MAIN_ACTIVITY_PAUSED;
 import static com.sothree.slidinguppanel.SlidingUpPanelLayout.PanelState.COLLAPSED;
 import static com.sothree.slidinguppanel.SlidingUpPanelLayout.PanelState.EXPANDED;
 
@@ -187,6 +188,7 @@ public class MainActivity extends AppCompatActivity implements MainActivityContr
     @Override
     protected void onPause() {
         super.onPause();
+        utils.sendLocalBroadcastMessage(MAIN_ACTIVITY_PAUSED, new Bundle(), this);
     }
 
     @Override

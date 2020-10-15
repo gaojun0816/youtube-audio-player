@@ -39,6 +39,7 @@ import static com.github.kotvertolet.youtubeaudioplayer.utilities.common.Constan
 import static com.github.kotvertolet.youtubeaudioplayer.utilities.common.Constants.PLAYER_ERROR_THROWABLE;
 import static com.github.kotvertolet.youtubeaudioplayer.utilities.common.Constants.PLAYER_PAUSED;
 import static com.github.kotvertolet.youtubeaudioplayer.utilities.common.Constants.PLAYER_RESUMED;
+import static com.github.kotvertolet.youtubeaudioplayer.utilities.common.Constants.MAIN_ACTIVITY_PAUSED;
 
 public class ExoPlayerService extends Service {
 
@@ -48,11 +49,13 @@ public class ExoPlayerService extends Service {
     private WifiManager.WifiLock wifiLock;
     private Handler progressHandler;
     private CommonUtils utils;
+    private YoutubeSongDto currentSong = null;
     private MediaSource mediaSource;
     private PlayerStateListener playerStateListener;
     private HeadsetStateBroadcastReceiver headsetStateReceiver;
     private ReceiverManager receiverManager;
     private ExoPlayerUtils exoPlayerUtils;
+    private MainActivityPausedReceiver mainActivityPausedReceiver;
 
 
     private long playbackPosition = 0;
@@ -88,6 +91,7 @@ public class ExoPlayerService extends Service {
         super.onDestroy();
         exoPlayerUtils.stopCacheTasks();
         clearPlayerState();
+        Log.d("playbackDebug", "updated in destroy");
         unregisterReceivers();
         stopService(new Intent(this, PlayerNotificationService.class));
         if (wifiLock.isHeld()) wifiLock.release();
@@ -140,8 +144,13 @@ public class ExoPlayerService extends Service {
         createPlayer();
         mediaSource = exoPlayerUtils.prepareMediaSource(songDto);
         exoPlayer.prepare(mediaSource);
+        playbackPosition = songDto.getPlaybackPosition();
+        currentWindow = songDto.getCurrentWindow();
+        exoPlayer.seekTo(currentWindow, playbackPosition);
         exoPlayer.setPlayWhenReady(true);
         Log.i(TAG, "Playback started, uri: " + songDto.getStreamUrl());
+        Log.d("playbackDebug", String.format("start position: %d", playbackPosition));
+        Log.d("playbackDebug", String.format("start window: %d", currentWindow));
     }
 
     private void startPlayback(MediaSource mediaSource) {
@@ -156,19 +165,11 @@ public class ExoPlayerService extends Service {
     }
 
     private void changePlaybackState() {
-//        Bundle bundle = new Bundle();
         if (exoPlayer != null && exoPlayer.getPlayWhenReady()) {
             pausePlay();
-//            releasePlayer();
-//            bundle.putInt(EXTRA_PLAYER_STATE_CODE, PLAYER_PAUSED);
-//            Log.i(TAG, "Playback status changed to 'paused'");
         } else {
             continuePlay();
-//            changePlaybackState(this.playbackPosition);
-//            bundle.putInt(EXTRA_PLAYER_STATE_CODE, PLAYER_RESUMED);
-//            Log.i(TAG, "Playback status changed to 'resumed'");
         }
-//        utils.sendLocalBroadcastMessage(ACTION_PLAYER_STATE_CHANGED, bundle, getApplicationContext());
     }
 
     private void pausePlay() {
@@ -248,6 +249,9 @@ public class ExoPlayerService extends Service {
         playerCommandsBroadcastReceiver = new PlayerCommandsBroadcastReceiver();
         receiverManager.registerLocalReceiver(playerCommandsBroadcastReceiver, new IntentFilter(ACTION_PLAYER_CHANGE_STATE));
 
+        mainActivityPausedReceiver = new MainActivityPausedReceiver();
+        receiverManager.registerLocalReceiver(mainActivityPausedReceiver, new IntentFilter(MAIN_ACTIVITY_PAUSED));
+
         headsetStateReceiver = new HeadsetStateBroadcastReceiver();
         final IntentFilter headphoneActionsFilter = new IntentFilter();
         for (String action : headsetStateReceiver.HEADPHONE_ACTIONS) {
@@ -258,6 +262,7 @@ public class ExoPlayerService extends Service {
 
     private void unregisterReceivers() {
         receiverManager.unregisterReceiver(playerCommandsBroadcastReceiver);
+        receiverManager.unregisterReceiver(mainActivityPausedReceiver);
         receiverManager.unregisterReceiver(headsetStateReceiver);
     }
 
@@ -268,6 +273,16 @@ public class ExoPlayerService extends Service {
             bundle.putParcelable(EXTRA_SONG, song);
             intent.putExtra(EXTRA_SONG, bundle);
             startService(intent);
+        }
+    }
+
+    private void updateCurrentSongStateInDB() {
+        if (currentSong != null) {
+            currentSong.setCurrentWindow(exoPlayer.getCurrentWindowIndex());
+            currentSong.setPlaybackPosition(exoPlayer.getCurrentPosition());
+            Log.d("playbackDebug", String.format("update position: %d", exoPlayer.getCurrentPosition()));
+            Log.d("playbackDebug", String.format("update window: %d", exoPlayer.getCurrentWindowIndex()));
+            App.getInstance().getDatabase().youtubeSongDao().update(currentSong);
         }
     }
 
@@ -336,7 +351,9 @@ public class ExoPlayerService extends Service {
             switch (action) {
                 case PlayerAction.START:
                     //String streamUriStr = intent.getStringExtra(EXTRA_SONG);
+                    updateCurrentSongStateInDB();
                     YoutubeSongDto song = intent.getParcelableExtra(EXTRA_SONG);
+                    currentSong = song;
                     startNotificationService(song);
                     if (song != null) {
                         //startPlayback(Uri.parse(streamUriStr));
@@ -405,6 +422,14 @@ public class ExoPlayerService extends Service {
             } else {
                 continuePlay();
             }
+        }
+    }
+
+    public class MainActivityPausedReceiver extends BroadcastReceiver {
+
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            updateCurrentSongStateInDB();
         }
     }
 }
