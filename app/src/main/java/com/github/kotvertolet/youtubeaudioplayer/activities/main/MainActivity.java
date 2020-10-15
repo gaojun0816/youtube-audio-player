@@ -21,6 +21,7 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.AutoCompleteTextView;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -249,6 +250,10 @@ public class MainActivity extends AppCompatActivity implements MainActivityContr
                 if (query.length() > 0 && !isLoading.get()) {
                     // Clearing pending search query as it will be executed
                     pendingSearchQuery = null;
+                    // Hide virtual keyboard
+                    InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
+                    imm.hideSoftInputFromWindow(searchView.getWindowToken(),
+                            InputMethodManager.RESULT_UNCHANGED_SHOWN);
                     // Do this trick to hide suggestions list
                     ((AutoCompleteTextView) searchView.findViewById(R.id.search_src_text)).dismissDropDown();
                     return presenter.searchYoutubeFirstPage(searchView.getQuery().toString());
