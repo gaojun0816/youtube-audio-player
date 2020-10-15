@@ -570,24 +570,30 @@ public class MainActivity extends AppCompatActivity implements MainActivityContr
                 });
 
         sbPlayerProgress.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            int progressValue = 0;
+
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
                 if (fromUser) {
-                    Bundle bundle = new Bundle();
-                    bundle.putInt(EXTRA_PLAYER_STATE_CODE, PlayerAction.CHANGE_PLAYBACK_PROGRESS);
-                    bundle.putInt(EXTRA_TRACK_PROGRESS, progress);
-                    utils.sendLocalBroadcastMessage(ACTION_PLAYER_CHANGE_STATE, bundle, getParent());
+                    progressValue = progress;
+                    tvTrackCurrentTime.setText(utils.convertMillsIntoTimeString(progress));
                 }
             }
 
             @Override
             public void onStartTrackingTouch(SeekBar seekBar) {
+                progressValue = seekBar.getProgress();
             }
 
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
+                Bundle bundle = new Bundle();
+                bundle.putInt(EXTRA_PLAYER_STATE_CODE, PlayerAction.CHANGE_PLAYBACK_PROGRESS);
+                bundle.putInt(EXTRA_TRACK_PROGRESS, progressValue);
+                utils.sendLocalBroadcastMessage(ACTION_PLAYER_CHANGE_STATE, bundle, getParent());
             }
         });
+
         initSlidingPanelListener();
         slidingUpPanelLayout.addPanelSlideListener(slidingPanelListener
         );
