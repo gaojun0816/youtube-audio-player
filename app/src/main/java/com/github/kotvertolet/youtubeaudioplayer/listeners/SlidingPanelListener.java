@@ -45,6 +45,7 @@ public class SlidingPanelListener implements SlidingUpPanelLayout.PanelSlideList
         transformThumbnail(slideOffset, multiplier);
         transformInfo(slideOffset);
         transformControls(slideOffset, multiplier);
+        transformChevron(slideOffset);
     }
 
     @Override
@@ -57,7 +58,7 @@ public class SlidingPanelListener implements SlidingUpPanelLayout.PanelSlideList
     }
 
     private void transformChevron(float slideOffset) {
-        ivChevron.setRotation(slideOffset * 90);
+        ivChevron.setRotation(slideOffset * 180 - 90);
 
     }
 

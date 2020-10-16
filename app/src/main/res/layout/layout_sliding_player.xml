@@ -103,7 +103,7 @@
             android:layout_alignParentTop="true"
             android:layout_alignParentEnd="true"
             android:layout_alignParentRight="true"
-            android:rotation="270"
+            android:rotation="-90"
             app:srcCompat="@drawable/ic_chevron_top_black_36dp" />
 
         <RelativeLayout

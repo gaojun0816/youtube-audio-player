@@ -602,8 +602,7 @@ public class MainActivity extends AppCompatActivity implements MainActivityContr
         });
 
         initSlidingPanelListener();
-        slidingUpPanelLayout.addPanelSlideListener(slidingPanelListener
-        );
+        slidingUpPanelLayout.addPanelSlideListener(slidingPanelListener);
     }
 
     private void initSlidingPanelListener() {
