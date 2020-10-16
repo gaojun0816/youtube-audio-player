@@ -39,7 +39,7 @@ import static com.github.kotvertolet.youtubeaudioplayer.utilities.common.Constan
 import static com.github.kotvertolet.youtubeaudioplayer.utilities.common.Constants.PLAYER_ERROR_THROWABLE;
 import static com.github.kotvertolet.youtubeaudioplayer.utilities.common.Constants.PLAYER_PAUSED;
 import static com.github.kotvertolet.youtubeaudioplayer.utilities.common.Constants.PLAYER_RESUMED;
-import static com.github.kotvertolet.youtubeaudioplayer.utilities.common.Constants.MAIN_ACTIVITY_PAUSED;
+import static com.github.kotvertolet.youtubeaudioplayer.utilities.common.Constants.UPDATE_DB;
 
 public class ExoPlayerService extends Service {
 
@@ -55,7 +55,7 @@ public class ExoPlayerService extends Service {
     private HeadsetStateBroadcastReceiver headsetStateReceiver;
     private ReceiverManager receiverManager;
     private ExoPlayerUtils exoPlayerUtils;
-    private MainActivityPausedReceiver mainActivityPausedReceiver;
+    private UpdateDBReceiver updateDBReceiver;
 
 
     private long playbackPosition = 0;
@@ -91,7 +91,7 @@ public class ExoPlayerService extends Service {
         super.onDestroy();
         exoPlayerUtils.stopCacheTasks();
         clearPlayerState();
-        Log.d("playbackDebug", "updated in destroy");
+        updateCurrentSongStateInDB();
         unregisterReceivers();
         stopService(new Intent(this, PlayerNotificationService.class));
         if (wifiLock.isHeld()) wifiLock.release();
@@ -149,8 +149,6 @@ public class ExoPlayerService extends Service {
         exoPlayer.seekTo(currentWindow, playbackPosition);
         exoPlayer.setPlayWhenReady(true);
         Log.i(TAG, "Playback started, uri: " + songDto.getStreamUrl());
-        Log.d("playbackDebug", String.format("start position: %d", playbackPosition));
-        Log.d("playbackDebug", String.format("start window: %d", currentWindow));
     }
 
     private void startPlayback(MediaSource mediaSource) {
@@ -166,6 +164,7 @@ public class ExoPlayerService extends Service {
 
     private void changePlaybackState() {
         if (exoPlayer != null && exoPlayer.getPlayWhenReady()) {
+            updateCurrentSongStateInDB();
             pausePlay();
         } else {
             continuePlay();
@@ -249,8 +248,8 @@ public class ExoPlayerService extends Service {
         playerCommandsBroadcastReceiver = new PlayerCommandsBroadcastReceiver();
         receiverManager.registerLocalReceiver(playerCommandsBroadcastReceiver, new IntentFilter(ACTION_PLAYER_CHANGE_STATE));
 
-        mainActivityPausedReceiver = new MainActivityPausedReceiver();
-        receiverManager.registerLocalReceiver(mainActivityPausedReceiver, new IntentFilter(MAIN_ACTIVITY_PAUSED));
+        updateDBReceiver = new UpdateDBReceiver();
+        receiverManager.registerLocalReceiver(updateDBReceiver, new IntentFilter(UPDATE_DB));
 
         headsetStateReceiver = new HeadsetStateBroadcastReceiver();
         final IntentFilter headphoneActionsFilter = new IntentFilter();
@@ -262,7 +261,7 @@ public class ExoPlayerService extends Service {
 
     private void unregisterReceivers() {
         receiverManager.unregisterReceiver(playerCommandsBroadcastReceiver);
-        receiverManager.unregisterReceiver(mainActivityPausedReceiver);
+        receiverManager.unregisterReceiver(updateDBReceiver);
         receiverManager.unregisterReceiver(headsetStateReceiver);
     }
 
@@ -277,11 +276,9 @@ public class ExoPlayerService extends Service {
     }
 
     private void updateCurrentSongStateInDB() {
-        if (currentSong != null) {
+        if (currentSong != null && exoPlayer != null) {
             currentSong.setCurrentWindow(exoPlayer.getCurrentWindowIndex());
             currentSong.setPlaybackPosition(exoPlayer.getCurrentPosition());
-            Log.d("playbackDebug", String.format("update position: %d", exoPlayer.getCurrentPosition()));
-            Log.d("playbackDebug", String.format("update window: %d", exoPlayer.getCurrentWindowIndex()));
             App.getInstance().getDatabase().youtubeSongDao().update(currentSong);
         }
     }
@@ -425,7 +422,7 @@ public class ExoPlayerService extends Service {
         }
     }
 
-    public class MainActivityPausedReceiver extends BroadcastReceiver {
+    public class UpdateDBReceiver extends BroadcastReceiver {
 
         @Override
         public void onReceive(Context context, Intent intent) {
