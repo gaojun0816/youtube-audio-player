@@ -164,7 +164,6 @@ public class ExoPlayerService extends Service {
 
     private void changePlaybackState() {
         if (exoPlayer != null && exoPlayer.getPlayWhenReady()) {
-            updateCurrentSongStateInDB();
             pausePlay();
         } else {
             continuePlay();
@@ -173,6 +172,7 @@ public class ExoPlayerService extends Service {
 
     private void pausePlay() {
         if (exoPlayer != null && exoPlayer.getPlayWhenReady()) {
+            updateCurrentSongStateInDB();
             Bundle bundle = new Bundle();
             releasePlayer();
             bundle.putInt(EXTRA_PLAYER_STATE_CODE, PLAYER_PAUSED);
